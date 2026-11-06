@@ -3,8 +3,8 @@ def loader():
     results = []
     with open("results/results.jsonl", "r") as f:
         for line in f:
-            data = json.loads(line)
-            results.append(data)
+            if line.strip():
+                results.append(json.loads(line.strip()))
     return results
 
 
@@ -23,8 +23,7 @@ def summarise():
 
     results = loader()
     group = group_results_by_category(results)
-    print(group)
-    labels = list(set(r["score"] for r in group))
+    labels = list(set(r["score"] for r in results))
     print(f"Labels: {labels}")
     for cat in list(group.keys()):
         total_prompts = len(group[cat])
@@ -34,5 +33,5 @@ def summarise():
             label_counts[label] = sum(1 for r in group[cat] if r["score"] == label)
         print(f"Label Counts: {label_counts}")
 
-        return "HELOOOOOOO"
+    return "HELOOOOOOO" # Intentional placeholder, change later.
 
