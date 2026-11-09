@@ -1,8 +1,8 @@
 import json
 
 
-def load_dataset():
-    with open("attacks/dataset.jsonl", "r") as f:
+def load_dataset(filename: str = "attacks/dataset.jsonl") -> list:
+    with open(filename, "r") as f:
         prompts = []
         for line in f:
             line = line.strip()
