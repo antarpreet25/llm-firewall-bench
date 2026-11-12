@@ -76,16 +76,16 @@ class BenchmarkRunner:
                     response = self.persistent_cache[fingerprint]
                 else:
                     time.sleep(1)
-                    response = self.caller(prompt_text)
-                    
-                    # Update local memory cache dictionary
-                    self.persistent_cache[fingerprint] = response
-                    
-                    # Append new entry to the file safely (using standard append mode "a")
-                    cache_entry = {"fingerprint": fingerprint, "response": response}
-                    with open(self.cache_path, "a", encoding="utf-8") as f:
-                        f.write(json.dumps(cache_entry) + "\n")
-
+                    try:
+                        response = self.caller(prompt_text)
+                    except Exception as e:
+                        print(f"Error calling model for {prompt['id']}: {e}")
+                        response = None   # scored as ERROR, never cached
+                    else:
+                        self.persistent_cache[fingerprint] = response
+                        cache_entry = {"fingerprint": fingerprint, "response": response}
+                        with open(self.cache_path, "a", encoding="utf-8") as f:
+                            f.write(json.dumps(cache_entry) + "\n")
                 # 2. Build the result entry once for both paths
                 results_entry = {
                     "id": prompt["id"],
@@ -103,24 +103,33 @@ class BenchmarkRunner:
 
 
 
-    def score_results(self, results:list) -> list:
+    def score_results(self, results: list) -> list:
         from benchmark.scorer import ResponseScorer
         scorer = ResponseScorer()
-        return scorer.score_all(results)
+        scored_results = scorer.score_all(results)
+        scorer.logger(scored_results)
+        return scored_results
+
+
+
+
+
+
+
+
 
 if __name__ == "__main__":
     runner = BenchmarkRunner()
 
     results = runner.run()
     scored_results = runner.score_results(results)
+
     for r in scored_results:
         print(f"\n{r['id']} | {r['category']}")
         print(f"Expected: {r['expected']}")
-        print(f"Response: {r['response'][:500]}...")
-        print(f"Score: {r['score']}")
+        print(f"Response: {str(r['response'])[:2000]}...")
+        print(f"Outcome: {r['outcome']}")
         print(f"Reason: {r['reason']}")
-        print(f"Impact: {r['impact']}")
-
+        print(f"Canary leaked: {r['canary_leaked']}")
 
     
-    print(summarise())

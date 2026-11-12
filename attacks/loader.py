@@ -2,7 +2,7 @@ import json
 
 
 def load_dataset(filename: str = "attacks/dataset.jsonl") -> list:
-    with open(filename, "r") as f:
+    with open(filename, "r", encoding= "utf-8") as f:
         prompts = []
         for line in f:
             line = line.strip()
